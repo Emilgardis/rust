@@ -684,24 +684,36 @@ impl<'a, 'gcx, 'tcx> InferCtxt<'a, 'gcx, 'tcx> {
                                                    expected_found.found,
                                                    expected_trait_ty.is_closure())
                 } else if let &TypeError::Sorts(ref expected_found) = e {
-                    let expected = if let ty::TyTuple(tys, _) = expected_found.expected.sty {
+                    let expected_len = if let ty::TyTuple(tys, _) = expected_found.expected.sty {
                         tys.len()
+                    } else if let ty::TyRef(_,ty::TypeAndMut{ty,..}) = expected_found.expected.sty {
+                        if let ty::TyTuple(tys,_) = ty.sty {
+                            tys.len()
+                        } else {
+                            1
+                        }
                     } else {
                         1
                     };
-                    let found = if let ty::TyTuple(tys, _) = expected_found.found.sty {
+                    let found_len = if let ty::TyTuple(tys, _) = expected_found.found.sty {
                         tys.len()
+                    } else if let ty::TyRef(_,ty::TypeAndMut{ty,..}) = expected_found.found.sty {
+                        if let ty::TyTuple(tys,_) = ty.sty {
+                            tys.len()
+                        } else {
+                            1
+                        }
                     } else {
                         1
                     };
 
-                    if expected != found {
+                    if expected_len != found_len {
                         // Expected `|| { }`, found `|x, y| { }`
                         // Expected `fn(x) -> ()`, found `|| { }`
                         self.report_arg_count_mismatch(span,
                                                        found_span,
-                                                       expected,
-                                                       found,
+                                                       expected_len,
+                                                       found_len,
                                                        expected_trait_ty.is_closure())
                     } else {
                         self.report_type_argument_mismatch(span,

@@ -1,0 +1,20 @@
+error[E0281]: type mismatch: `[closure@$DIR/issue-42143.rs:13:26: 13:43]` implements the trait `std::ops::FnMut<((u32, u32),)>`, but the trait `std::ops::FnMut<(&({integer}, {integer}),)>` is required
+  --> $DIR/issue-42143.rs:13:22
+   |
+13 |     let b = a.iter().map(|x: (u32, u32)| 0);
+   |                      ^^^ ----------------- implements `std::ops::FnMut<((u32, u32),)>`
+   |                      |
+   |                      requires `std::ops::FnMut<(&({integer}, {integer}),)>`
+   |                      expected reference, found tuple
+
+error[E0281]: type mismatch: `[closure@$DIR/issue-42143.rs:13:26: 13:43]` implements the trait `std::ops::FnOnce<((u32, u32),)>`, but the trait `std::ops::FnOnce<(&({integer}, {integer}),)>` is required
+  --> $DIR/issue-42143.rs:13:22
+   |
+13 |     let b = a.iter().map(|x: (u32, u32)| 0);
+   |                      ^^^ ----------------- implements `std::ops::FnOnce<((u32, u32),)>`
+   |                      |
+   |                      requires `std::ops::FnOnce<(&({integer}, {integer}),)>`
+   |                      expected reference, found tuple
+
+error: aborting due to previous error(s)
+
