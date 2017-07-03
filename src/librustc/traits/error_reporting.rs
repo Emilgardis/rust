@@ -677,6 +677,7 @@ impl<'a, 'gcx, 'tcx> InferCtxt<'a, 'gcx, 'tcx> {
                 });
 
                 if let &TypeError::TupleSize(ref expected_found) = e {
+                    println!("TupleSize");
                     // Expected `|x| { }`, found `|x, y| { }`
                     self.report_arg_count_mismatch(span,
                                                    found_span,
@@ -684,6 +685,7 @@ impl<'a, 'gcx, 'tcx> InferCtxt<'a, 'gcx, 'tcx> {
                                                    expected_found.found,
                                                    expected_trait_ty.is_closure())
                 } else if let &TypeError::Sorts(ref expected_found) = e {
+                    println!("Sorts");
                     let mut count_mismatch = None;
                     if let ty::TyTuple(expected_tys, _) = expected_found.expected.sty {
                         if let ty::TyTuple(found_tys, _) = expected_found.found.sty {
@@ -698,23 +700,13 @@ impl<'a, 'gcx, 'tcx> InferCtxt<'a, 'gcx, 'tcx> {
                             }
                         }
                     }
-
-                    //} else if false {
-                    //    self.report_type_argument_mismatch(span,
-                    //                                        found_span,
-                    //                                        expected_trait_ty,
-                    //                                        expected_trait_ref,
-                    //                                        actual_trait_ref,
-                    //                                        e)
-                    if count_mismatch.is_none() {
-                        self.report_closure_arg_mismatch(span,
-                                                         found_span,
-                                                         expected_trait_ty,
-                                                         expected_trait_ref,
-                                                         actual_trait_ref,
-                                                         e)
+                    if let Some(count_mismatch) = count_mismatch {
+                        count_mismatch
                     } else {
-                       count_mismatch.unwrap() 
+                       self.report_closure_arg_mismatch(span,
+                                                         found_span,
+                                                         expected_trait_ref,
+                                                         actual_trait_ref) 
                     }
                 } else {
                     self.report_type_argument_mismatch(span,
@@ -763,16 +755,17 @@ impl<'a, 'gcx, 'tcx> InferCtxt<'a, 'gcx, 'tcx> {
     fn report_closure_arg_mismatch(&self,
                            span: Span,
                            found_span: Option<Span>,
-                           expected: Ty<'tcx>,
                            expected_ref: ty::PolyTraitRef<'tcx>,
-                           found: ty::PolyTraitRef<'tcx>,
-                           _type_error: &TypeError<'tcx>) -> DiagnosticBuilder<'tcx>
+                           found: ty::PolyTraitRef<'tcx>)
+        -> DiagnosticBuilder<'tcx>
     {
         let mut err = struct_span_err!(self.tcx.sess, span, E0604,
             "type mismatch in closure arguments");
         if let Some(sp) = found_span {
-            err.span_label(span, format!("expected closure that takes a `{}`", found.self_ty().subst().type_at(0)));
-            err.span_label(sp, format!("takes a `{}`", expected_ref.0));
+            err.span_label(span, format!("expected closure that takes a `{}`", found));
+            err.span_label(sp, format!("takes a `{}`", expected_ref));
+        } else {
+            panic!();
         }
         
         err
